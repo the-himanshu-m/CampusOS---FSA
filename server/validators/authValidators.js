@@ -12,7 +12,8 @@ const validateRegister = (req, res, next) => {
         });
     }
 
-    if (!email || typeof email !== "string") {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || typeof email !== "string" || !emailRegex.test(email.trim())) {
         return res.status(400).json({
             success: false,
             message: "Valid email is required"
@@ -24,6 +25,16 @@ const validateRegister = (req, res, next) => {
             success: false,
             message: "Password must be at least 6 characters"
         });
+    }
+
+    if (req.body.role) {
+        const allowedRoles = ["STUDENT", "FACULTY", "ADMIN", "PLACEMENT_OFFICER"];
+        if (!allowedRoles.includes(String(req.body.role).toUpperCase())) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role specified"
+            });
+        }
     }
 
     next();

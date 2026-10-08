@@ -35,7 +35,28 @@ const userSchema = new mongoose.Schema(
 
         department: {
             type: String,
-            enum: ["CSE", "IT", "AIML", "ENTC"]
+            trim: true,
+            default: "CSE"
+        },
+
+        phone: {
+            type: String,
+            trim: true
+        },
+
+        bio: {
+            type: String,
+            trim: true
+        },
+
+        officeLocation: {
+            type: String,
+            trim: true
+        },
+
+        batch: {
+            type: String,
+            trim: true
         }
     },
     {

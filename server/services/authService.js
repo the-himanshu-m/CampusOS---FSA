@@ -3,9 +3,9 @@ import User from "../models/User.js";
 import generateToken from "../utils/jwt.js";
 
 const registerUser = async (userData) => {
-    const {name, email, password, department, identifier} = userData;
+    const { name, email, password, department, identifier, role } = userData;
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
 
     if (existingUser) {
         const error = new Error("Email already registered");
@@ -15,23 +15,24 @@ const registerUser = async (userData) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const assignedRole = role ? String(role).toUpperCase() : "STUDENT";
 
     const user = await User.create({
-        name,
-        email,
-        password : hashedPassword,
-        role : "STUDENT",
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
+        role: assignedRole,
         department,
         identifier
     });
 
     return {
-        id : user._id,
-        name : user.name,
-        email : user.email,
-        role : user.role,
-        department : user.department,
-        identifier : user.identifier
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        identifier: user.identifier
     };
 };
 

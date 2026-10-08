@@ -1,0 +1,23 @@
+{
+  "name": "campusos-monorepo",
+  "version": "1.0.0",
+  "description": "CampusOS — Campus Management Operating System for Students, Faculty, and Administrators",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "start:server": "npm --prefix server start",
+    "dev:client": "npm --prefix client run dev",
+    "build:client": "npm --prefix client run build",
+    "test": "npm --prefix server test",
+    "seed": "npm --prefix server run seed"
+  },
+  "keywords": [
+    "campus-management",
+    "express",
+    "nextjs",
+    "mongodb",
+    "jwt",
+    "rbac"
+  ],
+  "author": "",
+  "license": "ISC"
+}
