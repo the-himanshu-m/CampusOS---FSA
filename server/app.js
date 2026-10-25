@@ -1,3 +1,4 @@
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -12,32 +13,43 @@ import dashboardRouter from "./routes/dashboardRoutes.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
+
 app.set("trust proxy", 1);
 
 app.use(helmet());
 
-const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "http://localhost:3000",
+    "https://campus-os-nnf1c4e5x-himanshu-s-team1.vercel.app",
+].filter(Boolean).map((origin) => origin.replace(/\/$/, ""));
+
 app.use(
     cors({
-        origin: clientUrl === "*" ? "*" : [clientUrl, "http://localhost:3000"],
+        origin: (origin, callback) => {
+            // Allow server-to-server requests without an Origin header.
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error("Origin not allowed by CORS"));
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        allowedHeaders: ["Content-Type", "Authorization"],
     })
 );
 
 app.use(express.json());
 
-// Health Check
 app.get("/api/health", (req, res) => {
     return res.status(200).json({
         status: "ok",
         message: "CampusOS API is operational",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 
-// Mount Resource Routes
 app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/courses", courseRouter);
@@ -45,15 +57,13 @@ app.use("/api/assignments", assignmentRouter);
 app.use("/api/announcements", announcementRouter);
 app.use("/api/dashboard", dashboardRouter);
 
-// 404 handler for unrecognized routes
 app.use((req, res) => {
     return res.status(404).json({
         success: false,
-        message: `Endpoint ${req.method} ${req.originalUrl} not found`
+        message: `Endpoint ${req.method} ${req.originalUrl} not found`,
     });
 });
 
-// Centralized error handler
 app.use(errorHandler);
 
 export default app;
