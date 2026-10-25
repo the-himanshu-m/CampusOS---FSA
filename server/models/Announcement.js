@@ -15,12 +15,14 @@ const announcementSchema = new mongoose.Schema(
         author: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
         audience: {
             type: String,
             enum: ["ALL", "STUDENT", "FACULTY"],
-            default: "ALL"
+            default: "ALL",
+            index: true
         },
         course: {
             type: mongoose.Schema.Types.ObjectId,
@@ -37,6 +39,8 @@ const announcementSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+announcementSchema.index({ audience: 1, createdAt: -1 });
 
 const Announcement = mongoose.model("Announcement", announcementSchema);
 

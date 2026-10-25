@@ -7,7 +7,10 @@
     "start:server": "npm --prefix server start",
     "dev:client": "npm --prefix client run dev",
     "build:client": "npm --prefix client run build",
+    "start:client": "npm --prefix client start",
     "test": "npm --prefix server test",
+    "test:integration": "npm --prefix server run test:integration",
+    "test:all": "npm --prefix server run test:all",
     "seed": "npm --prefix server run seed"
   },
   "keywords": [

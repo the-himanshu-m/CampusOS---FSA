@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema(
         role: {
             type: String,
             enum: ["STUDENT", "FACULTY", "ADMIN", "PLACEMENT_OFFICER"],
-            default: "STUDENT"
+            default: "STUDENT",
+            index: true
         },
 
         identifier: {
@@ -63,6 +64,8 @@ const userSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+userSchema.index({ department: 1, role: 1 });
 
 const User = mongoose.model("User", userSchema);
 

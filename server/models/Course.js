@@ -30,7 +30,8 @@ const courseSchema = new mongoose.Schema(
         faculty: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            default: null
+            default: null,
+            index: true
         },
         students: [
             {
@@ -48,6 +49,9 @@ const courseSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+courseSchema.index({ students: 1 });
+courseSchema.index({ department: 1, status: 1 });
 
 const Course = mongoose.model("Course", courseSchema);
 

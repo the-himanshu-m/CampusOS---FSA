@@ -5,7 +5,8 @@ const submissionSchema = new mongoose.Schema(
         student: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
         content: {
             type: String,
@@ -50,16 +51,19 @@ const assignmentSchema = new mongoose.Schema(
         course: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Course",
-            required: true
+            required: true,
+            index: true
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
         deadline: {
             type: Date,
-            required: true
+            required: true,
+            index: true
         },
         maxPoints: {
             type: Number,
@@ -68,7 +72,8 @@ const assignmentSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: ["PUBLISHED", "DRAFT", "CLOSED"],
-            default: "PUBLISHED"
+            default: "PUBLISHED",
+            index: true
         },
         submissions: [submissionSchema]
     },
@@ -76,6 +81,9 @@ const assignmentSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+assignmentSchema.index({ course: 1, status: 1 });
+assignmentSchema.index({ deadline: 1, status: 1 });
 
 const Assignment = mongoose.model("Assignment", assignmentSchema);
 

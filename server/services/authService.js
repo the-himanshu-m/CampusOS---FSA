@@ -27,6 +27,7 @@ const registerUser = async (userData) => {
     });
 
     return {
+        _id: user._id,
         id: user._id,
         name: user.name,
         email: user.email,
@@ -37,7 +38,8 @@ const registerUser = async (userData) => {
 };
 
 const loginUser = async (email, password) => {
-    const user = await User.findOne({ email });
+    const normalizedEmail = (email || "").toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
         const error = new Error("Invalid email or password");
@@ -61,6 +63,7 @@ const loginUser = async (email, password) => {
     return {
         token,
         user: {
+            _id: user._id,
             id: user._id,
             name: user.name,
             email: user.email,
@@ -80,6 +83,6 @@ const getCurrentUser = async (UserId) => {
     }
 
     return user;
-}
+};
 
 export { registerUser, loginUser, getCurrentUser };
