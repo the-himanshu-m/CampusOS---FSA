@@ -5,10 +5,11 @@ let memoryServer = null;
 
 const connectToMongoDB = async () => {
     const isProduction = process.env.NODE_ENV === "production";
-    const mongoUri = process.env.MONGO_URI;
-    const useInMemoryDB = process.env.USE_IN_MEMORY_DB === "true";
+    const mongoUri = process.env.MONGO_URI?.trim();
+    const useInMemoryDB =
+        process.env.USE_IN_MEMORY_DB === "true";
 
-    // Production: require persistent MongoDB; never fall back to memory.
+    // Production must always use persistent MongoDB.
     if (isProduction) {
         if (!mongoUri) {
             throw new Error(
@@ -21,73 +22,79 @@ const connectToMongoDB = async () => {
                 "USE_IN_MEMORY_DB must not be true in production."
             );
         }
-
-        console.log("Connecting to production MongoDB...");
-
-        await mongoose.connect(mongoUri, {
-            serverSelectionTimeoutMS: 10000,
-        });
-
-        console.log("Connected to production MongoDB successfully.");
-        return;
     }
 
-    // Development: prefer configured MongoDB when available.
+    // Use the configured MongoDB connection.
     if (mongoUri && !useInMemoryDB) {
         try {
-            console.log("Connecting to configured MongoDB...");
+            console.log(
+                isProduction
+                    ? "Connecting to production MongoDB..."
+                    : "Connecting to configured MongoDB..."
+            );
 
             await mongoose.connect(mongoUri, {
-                serverSelectionTimeoutMS: 6000,
+                serverSelectionTimeoutMS: 10000
             });
 
-            console.log("MongoDB connected successfully.");
+            console.log(
+                "MongoDB connected successfully."
+            );
+
             return;
         } catch (error) {
-            console.warn(
+            // Never silently switch databases when a URI
+            // has been configured but its connection fails.
+            console.error(
                 "MongoDB connection failed:",
                 error.message
             );
-            console.warn(
-                "Using the development-only in-memory fallback."
-            );
+
+            throw error;
         }
     }
 
-    // Development/test fallback only.
-    try {
-        console.log("Starting embedded in-memory MongoDB...");
-
-        const { MongoMemoryServer } = await import(
-            "mongodb-memory-server"
-        );
-
-        memoryServer = await MongoMemoryServer.create();
-
-        await mongoose.connect(memoryServer.getUri());
-
-        console.log("Embedded MongoDB connected successfully.");
-
-        const { default: User } = await import(
-            "../models/User.js"
-        );
-
-        if ((await User.countDocuments()) === 0) {
-            const { seedData } = await import(
-                "../scripts/seedData.js"
+    // In-memory MongoDB is permitted only when explicitly
+    // enabled for local development or testing.
+    if (useInMemoryDB && !isProduction) {
+        try {
+            console.log(
+                "Starting explicitly requested in-memory MongoDB..."
             );
 
-            await seedData();
-            console.log("Development demo data seeded.");
-        }
-    } catch (error) {
-        console.error(
-            "Failed to initialize development database:",
-            error.message
-        );
+            const { MongoMemoryServer } = await import(
+                "mongodb-memory-server"
+            );
 
-        throw error;
+            memoryServer = await MongoMemoryServer.create();
+
+            await mongoose.connect(memoryServer.getUri());
+
+            console.log(
+                "In-memory MongoDB connected successfully."
+            );
+
+            return;
+        } catch (error) {
+            console.error(
+                "In-memory MongoDB initialization failed:",
+                error.message
+            );
+
+            if (memoryServer) {
+                await memoryServer.stop();
+                memoryServer = null;
+            }
+
+            throw error;
+        }
     }
+
+    throw new Error(
+        "MONGO_URI is missing or in-memory mode is disabled. " +
+        "Configure MONGO_URI, or explicitly set " +
+        "USE_IN_MEMORY_DB=true for local development/testing."
+    );
 };
 
 const disconnectFromMongoDB = async () => {
@@ -97,7 +104,7 @@ const disconnectFromMongoDB = async () => {
             console.log("Mongoose connection closed.");
         }
 
-            if (memoryServer) {
+        if (memoryServer) {
             await memoryServer.stop();
             memoryServer = null;
             console.log("Embedded MongoDB stopped.");
@@ -107,7 +114,12 @@ const disconnectFromMongoDB = async () => {
             "Database shutdown error:",
             error.message
         );
+
+        throw error;
     }
 };
 
-export { connectToMongoDB as default, disconnectFromMongoDB };
+export {
+    connectToMongoDB as default,
+    disconnectFromMongoDB
+};
